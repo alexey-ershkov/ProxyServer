@@ -6,17 +6,21 @@ import (
 	"net/http"
 )
 
+func init() {
+	logrus.SetLevel(logrus.DebugLevel)
+	logrus.SetFormatter(&logrus.TextFormatter{
+		DisableTimestamp: true,
+	})
+}
 
-
-func main()  {
-	logrus.SetLevel(logrus.InfoLevel)
-
+func main() {
+	PORT := "1080"
 	server := &http.Server{
-		Addr: ":3000",
+		Addr:    ":" + PORT,
 		Handler: http.HandlerFunc(handlers.MainHandler),
 	}
 
-	logrus.Info("Server started on port 3000")
+	logrus.Info("Server started on port ", PORT)
 
 	logrus.Fatal(server.ListenAndServe())
 }
