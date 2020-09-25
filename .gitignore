@@ -25,4 +25,5 @@
 
 .idea/
 
-go.sum
+pkg/
+src/go.sum

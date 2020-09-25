@@ -1,4 +1,4 @@
-module main.go
+module Proxy
 
 go 1.14
 
