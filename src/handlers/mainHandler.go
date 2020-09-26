@@ -26,7 +26,14 @@ func copyHeaders(from, to http.Header) {
 func MainHandler(respWriter http.ResponseWriter, request *http.Request) {
 	logrus.Info("Request: " + request.RequestURI)
 
-	proxyResp, err := handleHTTP(request)
+	var proxyResp *http.Response
+	var err error
+
+	if request.Method == http.MethodConnect {
+		proxyResp, err = handleHTTPS(request)
+	} else {
+		proxyResp, err = handleHTTP(request)
+	}
 	if err != nil {
 		logrus.Error(err)
 	}
