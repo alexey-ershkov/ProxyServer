@@ -31,6 +31,7 @@ func MainHandler(respWriter http.ResponseWriter, request *http.Request) {
 
 	if request.Method == http.MethodConnect {
 		proxyResp, err = handleHTTPS(request)
+		return
 	} else {
 		proxyResp, err = handleHTTP(request)
 	}
