@@ -14,7 +14,7 @@ func init() {
 }
 
 func main() {
-	PORT := "1081"
+	PORT := "1080"
 	server := &http.Server{
 		Addr:    ":" + PORT,
 		Handler: http.HandlerFunc(handlers.MainHandler),
