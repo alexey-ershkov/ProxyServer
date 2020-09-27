@@ -1,21 +1,19 @@
 package handlers
 
 import (
+	"bufio"
 	"crypto/tls"
-	"crypto/x509"
+	"fmt"
 	"github.com/sirupsen/logrus"
-	"io/ioutil"
 	"net"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"os/exec"
 )
 
-func handleHTTPS(respWriter http.ResponseWriter, request *http.Request) (*http.Response, error) {
-
-	var serverConnection *tls.Conn
-	var clientConnection net.Conn
+func handleHTTPS(respWriter http.ResponseWriter, connect *http.Request) (*http.Response, error) {
 
 	pwd, err := os.Getwd()
 	if err != nil {
@@ -25,7 +23,7 @@ func handleHTTPS(respWriter http.ResponseWriter, request *http.Request) (*http.R
 	genScriptDir := pwd + "/certGen"
 	certsDir := pwd + "/certs/"
 
-	parsedUrl, err := url.Parse(request.RequestURI)
+	parsedUrl, err := url.Parse(connect.RequestURI)
 	if err != nil {
 		logrus.Error(err)
 	}
@@ -43,50 +41,53 @@ func handleHTTPS(respWriter http.ResponseWriter, request *http.Request) (*http.R
 		logrus.Error(err)
 	}
 
-	//certCa, err := tls.LoadX509KeyPair(genScriptDir+"/ca.crt", genScriptDir+"/ca.key")
-	//if err != nil {
-	//	logrus.Error(err)
-	//}
+	config := new(tls.Config)
 
-	serverConfig := new(tls.Config)
-	//clientConfig := new(tls.Config)
+	config.Certificates = []tls.Certificate{cert}
+	config.InsecureSkipVerify = true
+	config.ServerName = parsedUrl.Scheme
 
-	certPool := x509.NewCertPool()
-	readCert,err := ioutil.ReadFile(certsDir+parsedUrl.Scheme+".crt")
+	var serverConnection *tls.Conn
+	var clientConnection net.Conn
+
+	clientConnection, err = handshake(respWriter, config)
 	if err != nil {
-		logrus.Fatal(err)
-	}
-	readCertCA,err := ioutil.ReadFile(genScriptDir+"/ca.crt")
-	if err != nil {
-		logrus.Fatal(err)
-	}
-	certPool.AppendCertsFromPEM(readCert)
-	certPoolCA := x509.NewCertPool()
-	certPoolCA.AppendCertsFromPEM(readCertCA)
-
-
-	serverConfig.ClientCAs = certPool
-	serverConfig.RootCAs = certPoolCA
-	serverConfig.Certificates = []tls.Certificate{cert}
-	serverConfig.InsecureSkipVerify = true
-	serverConfig.ServerName = parsedUrl.Scheme
-
-
-	serverConnection, err = tls.Dial("tcp", request.Host, serverConfig)
-	if err != nil {
-		logrus.Fatal(err)
-	}
-
-
-	clientConnection, err = handshake(respWriter, serverConfig)
-	if err != nil {
-		logrus.Println("handshake", request.Host, err)
+		logrus.Println("handshake", connect.Host, err)
 		return nil, err
 	}
+	defer clientConnection.Close()
 
-	if clientConnection != nil && serverConnection != nil {
-		logrus.Fatal("Ok")
+	serverConnection, err = tls.Dial("tcp", connect.Host, config)
+	if err != nil {
+		logrus.Fatal(err)
 	}
+	defer serverConnection.Close()
+
+	reader := bufio.NewReader(clientConnection)
+	request, err := http.ReadRequest(reader)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	fmt.Println(request)
+
+	rawReq, err := httputil.DumpRequest(request, true)
+	_, err = serverConnection.Write(rawReq)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	writer := bufio.NewReader(serverConnection)
+	response, err := http.ReadResponse(writer, request)
+
+	rawResp, err := httputil.DumpResponse(response, true)
+	_, err = clientConnection.Write(rawResp)
+	if err != nil {
+		logrus.Error(err)
+	}
+
+	clientConnection.Close()
+	serverConnection.Close()
 
 	return nil, nil
 }
