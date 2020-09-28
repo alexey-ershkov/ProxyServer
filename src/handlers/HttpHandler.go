@@ -65,13 +65,13 @@ func (hh *HttpHandler) doRequest() error {
 }
 
 func (hh *HttpHandler) sendResponse() error {
-	hh.respWriter.WriteHeader(hh.proxyResp.StatusCode)
 	copyHeaders(hh.proxyResp.Header, hh.respWriter.Header())
+	hh.respWriter.WriteHeader(hh.proxyResp.StatusCode)
+	hh.respWriter.Header().Add("Connection", hh.proxyResp.Header.Get("Connection"))
 
 	_, err := io.Copy(hh.respWriter, hh.proxyResp.Body)
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
