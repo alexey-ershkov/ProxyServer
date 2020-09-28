@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"Proxy/db"
+	"Proxy/models"
 	"bufio"
 	"crypto/tls"
+	"github.com/sirupsen/logrus"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -19,12 +22,14 @@ type HttpsHandler struct {
 	clientTcpConnection net.Conn
 	parsedUrl           *url.URL
 	proxyResp           *http.Response
+	dbConn              *db.Database
 }
 
-func NewHttpsHandler(respWriter http.ResponseWriter, connectRequest *http.Request) (*HttpsHandler, error) {
+func NewHttpsHandler(respWriter http.ResponseWriter, connectRequest *http.Request, dbConn *db.Database) (*HttpsHandler, error) {
 	hh := &HttpsHandler{}
 	hh.respWriter = respWriter
 	hh.connectRequest = connectRequest
+	hh.dbConn = dbConn
 
 	var err error
 
@@ -60,6 +65,19 @@ func (hh *HttpsHandler) ProxyRequest() error {
 		return err
 	}
 
+	reqDump, err := httputil.DumpRequest(hh.clientRequest, true)
+	if err != nil {
+		logrus.Warn("Can't dump request")
+	}
+
+	dbReq := models.DatabaseReq{
+		Host: "https://" + hh.parsedUrl.Scheme + hh.clientRequest.URL.Path,
+		IsHttps: true,
+		Request: string(reqDump),
+	}
+
+	hh.dbConn.InsertRequest(dbReq)
+
 	err = hh.doHttpsProxyRequest()
 	if err != nil {
 		return err
@@ -76,6 +94,7 @@ func (hh *HttpsHandler) ProxyRequest() error {
 func (hh *HttpsHandler) Defer() {
 	hh.clientTcpConnection.Close()
 	hh.serverTcpConnection.Close()
+	hh.dbConn.Close()
 }
 
 func (hh *HttpsHandler) doHttpsProxyRequest() error {

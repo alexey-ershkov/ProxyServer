@@ -1,8 +1,12 @@
 package handlers
 
 import (
+	"Proxy/db"
+	"Proxy/models"
+	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
+	"net/http/httputil"
 	"strings"
 )
 
@@ -10,12 +14,14 @@ type HttpHandler struct {
 	respWriter    http.ResponseWriter
 	clientRequest *http.Request
 	proxyResp     *http.Response
+	dbConn        *db.Database
 }
 
-func NewHttpHandler(respWriter http.ResponseWriter, clientRequest *http.Request) *HttpHandler {
+func NewHttpHandler(respWriter http.ResponseWriter, clientRequest *http.Request, dbConn *db.Database) *HttpHandler {
 	return &HttpHandler{
 		respWriter:    respWriter,
 		clientRequest: clientRequest,
+		dbConn:        dbConn,
 	}
 }
 
@@ -33,7 +39,8 @@ func (hh *HttpHandler) ProxyRequest() error {
 	return nil
 }
 
-func (hh *HttpHandler) Defer () {
+func (hh *HttpHandler) Defer() {
+	hh.dbConn.Close()
 }
 
 func (hh *HttpHandler) doRequest() error {
@@ -55,6 +62,18 @@ func (hh *HttpHandler) doRequest() error {
 			}
 		}
 	}
+
+	reqDump, err := httputil.DumpRequest(proxyReq, true)
+	if err != nil {
+		logrus.Warn("Can't dump request")
+	}
+
+	dbReq := models.DatabaseReq{
+		Host:    hh.clientRequest.RequestURI,
+		IsHttps: false,
+		Request: string(reqDump),
+	}
+	hh.dbConn.InsertRequest(dbReq)
 
 	hh.proxyResp, err = client.Do(proxyReq)
 	if err != nil {
