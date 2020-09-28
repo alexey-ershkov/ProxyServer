@@ -94,7 +94,7 @@ func (hh *HttpsHandler) doHttpsProxyRequest() error {
 
 	hh.proxyResp = response
 
-	return  nil
+	return nil
 }
 
 func (hh *HttpsHandler) setupHttpsClientConnection() error {
@@ -164,12 +164,17 @@ func (hh *HttpsHandler) setupHttpsConfig() error {
 	genScriptAndRootCaDir := pwd + "/certGen"
 	certsDir := pwd + "/certs/"
 
-	err = genProxyCert(genScriptAndRootCaDir, "/gen_cert.sh", hh.parsedUrl.Scheme, certsDir)
-	if err != nil {
-		return err
+	certFilename := certsDir + hh.parsedUrl.Scheme + ".crt"
+
+	_, err = os.Stat(certFilename)
+	if os.IsNotExist(err) {
+		err = genProxyCert(genScriptAndRootCaDir, "/gen_cert.sh", hh.parsedUrl.Scheme, certsDir)
+		if err != nil {
+			return err
+		}
 	}
 
-	cert, err := tls.LoadX509KeyPair(certsDir+hh.parsedUrl.Scheme+".crt", genScriptAndRootCaDir+"/cert.key")
+	cert, err := tls.LoadX509KeyPair(certFilename, genScriptAndRootCaDir+"/cert.key")
 	if err != nil {
 		return err
 	}
