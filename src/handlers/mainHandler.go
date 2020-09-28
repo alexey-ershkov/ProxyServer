@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"github.com/sirupsen/logrus"
-	"io"
 	"net/http"
+	"net/url"
 )
 
 func contains(slice []string, value string) bool {
@@ -31,20 +31,34 @@ func MainHandler(respWriter http.ResponseWriter, request *http.Request) {
 	var err error
 
 	if request.Method == http.MethodConnect {
-		proxyResp, err = handleHTTPS(respWriter, request)
-		return
+		parsedUrl, err := url.Parse(request.RequestURI)
+		if err != nil {
+			logrus.Error(err)
+		}
+
+		config, err := getHttpsConfig(parsedUrl.Scheme)
+
+		clientTcpSocket, err := setupHttpsClientConnection(respWriter, config)
+		if err != nil {
+			logrus.Error(err)
+		}
+
+		serverTcpSocket, err := setupHttpsServerConnection(request.Host, config)
+
+		request, err := getHttpsRequest(clientTcpSocket)
+
+		proxyResp, err = doHttpsProxyRequest(request, serverTcpSocket)
+		err = sendHttpsProxyResponse(proxyResp, clientTcpSocket)
+
+		serverTcpSocket.Close()
+		clientTcpSocket.Close()
+
 	} else {
-		proxyResp, err = handleHTTP(request)
+		proxyResp, err = doHttpProxyRequest(request)
+		sendHttpProxyResponse(respWriter, proxyResp)
 	}
 	if err != nil {
 		logrus.Error(err)
 	}
 
-	respWriter.WriteHeader(proxyResp.StatusCode)
-	copyHeaders(proxyResp.Header, respWriter.Header())
-
-	_, err = io.Copy(respWriter, proxyResp.Body)
-	if err != nil {
-		logrus.Error(err)
-	}
 }

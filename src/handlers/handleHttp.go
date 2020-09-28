@@ -1,11 +1,13 @@
 package handlers
 
 import (
+	"github.com/sirupsen/logrus"
+	"io"
 	"net/http"
 	"strings"
 )
 
-func handleHTTP(request *http.Request) (*http.Response, error) {
+func doHttpProxyRequest(request *http.Request) (*http.Response, error) {
 	client := http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -31,4 +33,14 @@ func handleHTTP(request *http.Request) (*http.Response, error) {
 	}
 
 	return proxyResp, nil
+}
+
+func sendHttpProxyResponse (responseWriter http.ResponseWriter,response *http.Response) {
+	responseWriter.WriteHeader(response.StatusCode)
+	copyHeaders(response.Header, responseWriter.Header())
+
+	_, err := io.Copy(responseWriter, response.Body)
+	if err != nil {
+		logrus.Error(err)
+	}
 }
