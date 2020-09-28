@@ -17,7 +17,7 @@ func main() {
 	PORT := "1080"
 	server := &http.Server{
 		Addr:    ":" + PORT,
-		Handler: http.HandlerFunc(handlers.MainHandler),
+		Handler: http.HandlerFunc(handlers.ServeHttp),
 	}
 
 	logrus.Info("Server started on port ", PORT)
