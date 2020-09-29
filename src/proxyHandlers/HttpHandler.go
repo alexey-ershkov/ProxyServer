@@ -3,6 +3,7 @@ package proxyHandlers
 import (
 	"Proxy/db"
 	"Proxy/models"
+	"Proxy/utils"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
@@ -83,7 +84,7 @@ func (hh *HttpHandler) doRequest() error {
 }
 
 func (hh *HttpHandler) sendResponse() error {
-	copyHeaders(hh.proxyResp.Header, hh.respWriter.Header())
+	utils.CopyHeaders(hh.proxyResp.Header, hh.respWriter.Header())
 	hh.respWriter.WriteHeader(hh.proxyResp.StatusCode)
 	hh.respWriter.Header().Add("Connection", hh.proxyResp.Header.Get("Connection"))
 
