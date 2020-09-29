@@ -30,15 +30,51 @@ func CreateNewDatabaseConnection() (*Database, error) {
 
 func (db *Database) InsertRequest(dbReq models.DatabaseReq) {
 	_, err := db.dbConn.Exec(
-		"INSERT INTO requests VALUES ($1, $2, $3)",
+		"INSERT INTO requests VALUES ($1, $2)",
 		dbReq.Host,
-		dbReq.IsHttps,
 		dbReq.Request,
 	)
 
 	if err != nil {
 		logrus.Warn("Can't save request to database")
+		logrus.Error(err)
 	}
+}
+
+func (db *Database) GetRequestList() ([]models.DatabaseReq, error) {
+	rows, err := db.dbConn.Query(
+		"SELECT * FROM requests",
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	requests := make([]models.DatabaseReq, 0)
+	for rows.Next() {
+		req := models.DatabaseReq{}
+		err := rows.Scan(&req.Host, &req.Request, &req.Id)
+		if err != nil {
+			return nil, err
+		}
+		requests = append(requests, req)
+	}
+
+	rows.Close()
+	return requests, nil
+}
+
+func (db *Database) GetReqById(id int) models.DatabaseReq {
+	req := models.DatabaseReq{}
+	row := db.dbConn.QueryRow(
+		"SELECT * FROM requests WHERE id=$1", id)
+	err := row.Scan(&req.Host, &req.Request, &req.Id)
+	if err != nil {
+		logrus.Warn("Can't get data from database")
+		logrus.Error(err)
+	}
+
+	return req
 }
 
 func (db *Database) Close() {

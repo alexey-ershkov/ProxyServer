@@ -1,4 +1,4 @@
-package handlers
+package proxyHandlers
 
 type Handler interface {
 	ProxyRequest() error

@@ -1,4 +1,4 @@
-package handlers
+package proxyHandlers
 
 import (
 	"Proxy/db"
@@ -70,7 +70,6 @@ func (hh *HttpHandler) doRequest() error {
 
 	dbReq := models.DatabaseReq{
 		Host:    hh.clientRequest.RequestURI,
-		IsHttps: false,
 		Request: string(reqDump),
 	}
 	hh.dbConn.InsertRequest(dbReq)

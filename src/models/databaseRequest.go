@@ -1,7 +1,7 @@
 package models
 
 type DatabaseReq struct {
-	Host string
-	IsHttps bool
+	Host    string
 	Request string
+	Id      int
 }

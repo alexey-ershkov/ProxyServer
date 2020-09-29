@@ -1,4 +1,4 @@
-package handlers
+package proxyHandlers
 
 import (
 	"Proxy/db"
@@ -71,8 +71,7 @@ func (hh *HttpsHandler) ProxyRequest() error {
 	}
 
 	dbReq := models.DatabaseReq{
-		Host: "https://" + hh.parsedUrl.Scheme + hh.clientRequest.URL.Path,
-		IsHttps: true,
+		Host:    "https://" + hh.parsedUrl.Scheme + hh.clientRequest.URL.Path,
 		Request: string(reqDump),
 	}
 

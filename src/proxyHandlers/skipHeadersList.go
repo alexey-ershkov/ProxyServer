@@ -1,4 +1,4 @@
-package handlers
+package proxyHandlers
 
 var skipHeaderList = []string{
 	"proxy-connection",
