@@ -1,7 +1,7 @@
 package repeatReqHandlers
 
 import (
-	"Proxy/db"
+	"Proxy/src/db"
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"net/http"

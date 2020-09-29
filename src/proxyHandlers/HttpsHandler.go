@@ -1,8 +1,8 @@
 package proxyHandlers
 
 import (
-	"Proxy/db"
-	"Proxy/models"
+	"Proxy/src/db"
+	"Proxy/src/models"
 	"bufio"
 	"crypto/tls"
 	"github.com/sirupsen/logrus"

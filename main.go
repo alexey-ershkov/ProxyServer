@@ -1,23 +1,39 @@
 package main
 
 import (
-	"Proxy/proxyHandlers"
-	"Proxy/repeatReqHandlers"
+	"Proxy/src/proxyHandlers"
+	"Proxy/src/repeatReqHandlers"
+	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 	"net/http"
+	"os"
 )
 
 func init() {
-	logrus.SetLevel(logrus.DebugLevel)
+	debugLevel, _ := os.LookupEnv("DEBUG_LEVEL")
+	switch debugLevel {
+	case "DEBUG":
+		logrus.SetLevel(logrus.DebugLevel)
+	case "INFO":
+		logrus.SetLevel(logrus.InfoLevel)
+	case "WARNING":
+		logrus.SetLevel(logrus.WarnLevel)
+	case "ERROR":
+		logrus.SetLevel(logrus.ErrorLevel)
+	}
 	logrus.SetFormatter(&logrus.TextFormatter{
 		DisableTimestamp: true,
 	})
+
+	if err := godotenv.Load(); err != nil {
+		logrus.Print("No .env file found")
+	}
 }
 
 func main() {
 
-	ProxyPort := "1080"
-	RepeatPort := "80"
+	ProxyPort, _ := os.LookupEnv("PROXY_PORT")
+	RepeatPort, _ := os.LookupEnv("REPEAT_PORT")
 
 	server := &http.Server{
 		Addr:    ":" + ProxyPort,

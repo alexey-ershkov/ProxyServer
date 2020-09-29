@@ -1,9 +1,9 @@
 package proxyHandlers
 
 import (
-	"Proxy/db"
-	"Proxy/models"
-	"Proxy/utils"
+	"Proxy/src/db"
+	"Proxy/src/models"
+	"Proxy/src/utils"
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"

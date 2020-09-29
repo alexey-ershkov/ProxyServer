@@ -1,7 +1,7 @@
 package proxyHandlers
 
 import (
-	"Proxy/db"
+	"Proxy/src/db"
 	"github.com/sirupsen/logrus"
 	"net/http"
 )

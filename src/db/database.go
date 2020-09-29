@@ -1,9 +1,10 @@
 package db
 
 import (
-	"Proxy/models"
+	"Proxy/src/models"
 	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
+	"os"
 )
 
 type Database struct {
@@ -11,9 +12,11 @@ type Database struct {
 }
 
 func CreateNewDatabaseConnection() (*Database, error) {
+	username, _ := os.LookupEnv("DB_USER")
+	dbName, _ := os.LookupEnv("DB_NAME")
 	dbConf := pgx.ConnConfig{
-		User:                 "farcoad",
-		Database:             "proxy",
+		User:                 username,
+		Database:             dbName,
 		PreferSimpleProtocol: false,
 	}
 
