@@ -25,4 +25,9 @@
 
 .idea/
 
+pkg/
 go.sum
+ca.crt
+ca.key
+cert.key
+certs/
