@@ -41,6 +41,7 @@ func (hh *HttpHandler) ProxyRequest() error {
 }
 
 func (hh *HttpHandler) Defer() {
+	hh.proxyResp.Body.Close()
 	hh.dbConn.Close()
 }
 
@@ -92,5 +93,6 @@ func (hh *HttpHandler) sendResponse() error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }

@@ -93,6 +93,7 @@ func (hh *HttpsHandler) ProxyRequest() error {
 func (hh *HttpsHandler) Defer() {
 	hh.clientTcpConnection.Close()
 	hh.serverTcpConnection.Close()
+	hh.proxyResp.Body.Close()
 	hh.dbConn.Close()
 }
 
